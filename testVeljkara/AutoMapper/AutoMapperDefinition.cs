@@ -14,7 +14,7 @@ namespace testVeljkara.AutoMapper
         {
             CreateMap<User, GetTokenDto>().ReverseMap();
             CreateMap<User, UserDto>().ReverseMap();
-            CreateMap<Link, SaveLinkDto>().ReverseMap();
+            CreateMap<DataBase64, DataDto>().ReverseMap();
         }
     }
 }

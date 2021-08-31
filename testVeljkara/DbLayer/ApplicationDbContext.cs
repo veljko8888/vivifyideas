@@ -14,6 +14,12 @@ namespace testVeljkara.DbLayer
         }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<Link> Links { get; set; }
+        public DbSet<DataBase64> DataBase64s { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<DataBase64>()
+                .HasKey(o => new { o.Id, o.Side });
+        }
     }
 }

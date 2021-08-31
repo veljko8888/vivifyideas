@@ -43,16 +43,6 @@ namespace testVeljkara
             services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("IdentityConnection")));
 
-            //services.AddCors(o => o.AddPolicy("CorsPolicy", builder => {
-            //    builder
-            //    .AllowAnyMethod()
-            //    .AllowAnyHeader()
-            //    .AllowCredentials()
-            //    .WithOrigins("http://localhost:4300");
-            //}));
-
-            //services.AddCors();
-
             //automapper config
             var mappingConfig = new MapperConfiguration(mc =>
             {
@@ -64,7 +54,8 @@ namespace testVeljkara
             //register dependency injection for services
             services.AddSingleton(mapper);
             services.AddTransient<IUserService, UserService>();
-            services.AddTransient<ILinkService, LinkService>();
+            services.AddTransient<IDataService, DataService>();
+            services.AddTransient<IAuthService, AuthService>();
 
             //authentication configuration
             var key = Encoding.UTF8.GetBytes(Configuration["AppSettings:JWT_Secret"].ToString());

@@ -1,13 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using ResponseWrapper;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using testVeljkara.ApplicationConstants;
 using testVeljkara.DbLayer;
 using testVeljkara.Dtos;
+using testVeljkara.Helpers;
 using testVeljkara.ServiceLayer.Interfaces;
 
 namespace testVeljkara.ServiceLayer.Services
@@ -24,50 +22,63 @@ namespace testVeljkara.ServiceLayer.Services
             _mapper = mapper;
         }
 
-        public async Task<ResponseWrapper<UserDto>> FindByUsernameAsync(string username, string password)
+        public async Task<Result<UserDto>> FindByUsernameAsync(string username, string password)
         {
-            var userDB = await _context.Users
+            Result<UserDto> result = new Result<UserDto>();
+            User userDB = await _context.Users
                 .FirstOrDefaultAsync(x => x.Username.Equals(username));
 
             if (userDB != null)
             {
                 if (!VerifyPassword(password, userDB.PasswordHash, userDB.PasswordSalt))
                 {
-                    return ResponseWrapper<UserDto>.Error(AppConstants.WrongUsernameOrPassword);
+                    return HelperManager<UserDto>.GenerateErrorServiceResult(
+                        ResultStatus.NotFound,
+                        "Wrong username or password.",
+                        result);
                 }
 
                 var user = _mapper.Map<UserDto>(userDB);
-                return ResponseWrapper<UserDto>.Success(user);
+                return HelperManager<UserDto>.GenerateServiceSuccessResult(ResultStatus.Success, user, result);
             }
 
-            return ResponseWrapper<UserDto>.Error(AppConstants.WrongUsernameOrPassword);
+            return HelperManager<UserDto>.GenerateErrorServiceResult(ResultStatus.NotFound, "Wrong username or password.", result);
         }
 
-        public async Task<ResponseWrapper<UserDto>> Insert(UserDto user)
+        public async Task<Result<UserDto>> Insert(UserDto user)
         {
+            Result<UserDto> result = new Result<UserDto>();
             try
             {
                 bool usernameExist = _context.Users.Any(x => x.Username.Equals(user.Username));
                 if (usernameExist)
                 {
-                    return ResponseWrapper<UserDto>.Error(AppConstants.UsernameAlreadyExist);
+                    return HelperManager<UserDto>.GenerateErrorServiceResult(
+                        ResultStatus.InvalidParameters,
+                        "Username already exists.",
+                        result);
                 }
 
                 byte[] passwordHash, passwordSalt;
                 CreatePasswordHash(user.Password, out passwordHash, out passwordSalt);
 
                 User userDB = _mapper.Map<User>(user);
-                userDB.Id = Guid.NewGuid();
                 userDB.PasswordHash = passwordHash;
                 userDB.PasswordSalt = passwordSalt;
                 _context.Users.Add(userDB);
                 await _context.SaveChangesAsync();
                 user = _mapper.Map<UserDto>(userDB);
-                return ResponseWrapper<UserDto>.Success(user);
+                return HelperManager<UserDto>.GenerateServiceSuccessResult(
+                        ResultStatus.Created,
+                        user,
+                        result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return ResponseWrapper<UserDto>.Error(AppConstants.ErrorSavingUser);
+                return HelperManager<UserDto>.GenerateErrorServiceResult(
+                        ResultStatus.Failure,
+                        ex.Message,
+                        result);
             }
         }
 

@@ -10,7 +10,8 @@ namespace testVeljkara.DbLayer
     public class User
     {
         [Key]
-        public Guid Id { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
         public string Username { get; set; }
         [Column(TypeName = "nvarchar(350)")]
         public byte[] PasswordHash { get; set; }
